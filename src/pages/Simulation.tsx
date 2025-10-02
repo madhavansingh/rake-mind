@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Play, AlertTriangle, TrendingDown, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Play, AlertTriangle, TrendingDown, Zap, Info, Clock, TrendingUp, Package, DollarSign, Activity, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Scenario {
   id: string;
@@ -10,29 +17,61 @@ interface Scenario {
   description: string;
   icon: React.ReactNode;
   impact: string;
+  category: string;
+  estimatedTime: string;
+  affectedRakes: number;
 }
 
 const scenarios: Scenario[] = [
   {
     id: "stockyard-low",
     name: "Stockyard Low Supply",
-    description: "Simulate critical shortage in primary stockyard",
+    description: "Simulate critical shortage in primary stockyard with only 40% inventory remaining",
     icon: <AlertTriangle className="w-5 h-5" />,
     impact: "High",
+    category: "Inventory",
+    estimatedTime: "9.8 hrs",
+    affectedRakes: 3,
   },
   {
     id: "wagon-shortage",
     name: "Wagon Shortage",
-    description: "Reduced wagon availability scenario",
+    description: "Reduced wagon availability - only 8 out of 12 wagons operational due to maintenance",
     icon: <TrendingDown className="w-5 h-5" />,
     impact: "Medium",
+    category: "Resources",
+    estimatedTime: "8.9 hrs",
+    affectedRakes: 2,
   },
   {
     id: "urgent-order",
     name: "Urgent Customer Order",
-    description: "High-priority order requiring immediate dispatch",
+    description: "High-priority order requiring immediate dispatch within 6 hours for premium client",
     icon: <Zap className="w-5 h-5" />,
     impact: "Critical",
+    category: "Operations",
+    estimatedTime: "6.2 hrs",
+    affectedRakes: 1,
+  },
+  {
+    id: "weather-delay",
+    name: "Weather Disruption",
+    description: "Heavy rainfall causing loading delays and reduced operational hours",
+    icon: <Activity className="w-5 h-5" />,
+    impact: "High",
+    category: "External",
+    estimatedTime: "11.5 hrs",
+    affectedRakes: 4,
+  },
+  {
+    id: "peak-demand",
+    name: "Peak Demand Surge",
+    description: "25% increase in order volume during festival season requiring optimal allocation",
+    icon: <TrendingUp className="w-5 h-5" />,
+    impact: "High",
+    category: "Demand",
+    estimatedTime: "7.8 hrs",
+    affectedRakes: 5,
   },
 ];
 
@@ -86,22 +125,50 @@ const Simulation = () => {
     }, 3000);
   };
 
+  const selectedScenarioData = scenarios.find(s => s.id === selectedScenario);
+
   return (
-    <div className="p-8 space-y-8 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-          What-If Simulation
-        </h1>
-        <p className="text-muted-foreground">
-          Test different scenarios and see AI-powered adjustments in real-time
-        </p>
-      </div>
+    <TooltipProvider>
+      <div className="p-8 space-y-8 animate-fade-in">
+        {/* Header */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              What-If Simulation
+            </h1>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="w-5 h-5 text-primary cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-md">
+                <p>AI-powered simulation engine tests various operational scenarios and provides optimized solutions with predicted outcomes</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <p className="text-muted-foreground">
+            Test different scenarios and see AI-powered adjustments in real-time
+          </p>
+          <div className="flex items-center gap-4 mt-3">
+            <Badge variant="outline" className="gap-1">
+              <Activity className="w-3 h-3" />
+              {scenarios.length} Scenarios Available
+            </Badge>
+            <Badge variant="outline" className="gap-1 border-primary/50 text-primary">
+              <Zap className="w-3 h-3" />
+              AI-Powered Analysis
+            </Badge>
+          </div>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Scenario Selection */}
         <div className="lg:col-span-1 space-y-4">
-          <h3 className="text-lg font-semibold mb-4">Select Scenario</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Select Scenario</h3>
+            <Badge variant="secondary" className="text-xs">
+              {scenarios.length} Total
+            </Badge>
+          </div>
           {scenarios.map((scenario) => (
             <Card
               key={scenario.id}
@@ -114,7 +181,7 @@ const Simulation = () => {
             >
               <div className="flex items-start gap-3">
                 <div
-                  className={`p-2 rounded-lg ${
+                  className={`p-2 rounded-lg flex-shrink-0 ${
                     scenario.impact === "Critical"
                       ? "bg-red-500/20 text-red-400"
                       : scenario.impact === "High"
@@ -124,22 +191,38 @@ const Simulation = () => {
                 >
                   {scenario.icon}
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold mb-1">{scenario.name}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h4 className="font-semibold text-sm">{scenario.name}</h4>
+                    <Badge variant="outline" className="text-[10px] px-1 py-0 flex-shrink-0">
+                      {scenario.category}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                     {scenario.description}
                   </p>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded ${
-                      scenario.impact === "Critical"
-                        ? "bg-red-500/20 text-red-400"
-                        : scenario.impact === "High"
-                        ? "bg-orange-500/20 text-orange-400"
-                        : "bg-yellow-500/20 text-yellow-400"
-                    }`}
-                  >
-                    {scenario.impact} Impact
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge
+                      className={`text-xs font-medium px-2 py-0 ${
+                        scenario.impact === "Critical"
+                          ? "bg-red-500/20 text-red-400 border-red-500/30"
+                          : scenario.impact === "High"
+                          ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                      }`}
+                      variant="outline"
+                    >
+                      {scenario.impact} Impact
+                    </Badge>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      {scenario.estimatedTime}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Package className="w-3 h-3" />
+                      {scenario.affectedRakes} Rakes
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -354,11 +437,58 @@ const Simulation = () => {
                 </div>
               </div>
 
+              {/* AI Insights & Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="glass-card p-4 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="w-4 h-4 text-primary" />
+                    <p className="text-xs text-muted-foreground">Cost Impact</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {results.adjustedPlan.cost > results.originalPlan.cost ? "+" : "−"}₹
+                    {Math.abs((results.adjustedPlan.cost - results.originalPlan.cost) / 1000).toFixed(0)}K
+                  </p>
+                </div>
+                <div className="glass-card p-4 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-4 h-4 text-secondary" />
+                    <p className="text-xs text-muted-foreground">Time Saved</p>
+                  </div>
+                  <p className="text-xl font-bold text-primary">
+                    {results.originalPlan.time > results.adjustedPlan.time ? "−" : "+"}
+                    {Math.abs(results.originalPlan.time - results.adjustedPlan.time).toFixed(1)}h
+                  </p>
+                </div>
+                <div className="glass-card p-4 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <p className="text-xs text-muted-foreground">Efficiency</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {results.adjustedPlan.utilization.toFixed(1)}%
+                  </p>
+                </div>
+                <div className="glass-card p-4 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package className="w-4 h-4 text-foreground" />
+                    <p className="text-xs text-muted-foreground">Rake Diff</p>
+                  </div>
+                  <p className="text-xl font-bold">
+                    {results.adjustedPlan.rakes === results.originalPlan.rakes ? "=" : 
+                     results.adjustedPlan.rakes > results.originalPlan.rakes ? "+" : "−"}
+                    {Math.abs(results.adjustedPlan.rakes - results.originalPlan.rakes)}
+                  </p>
+                </div>
+              </div>
+
               {/* AI Recommendations */}
               <div className="glass-card p-6 rounded-xl glow-border-orange">
                 <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Zap className="w-5 h-5 text-secondary" />
                   AI Recommendations
+                  <Badge variant="outline" className="ml-auto text-xs">
+                    Auto-generated
+                  </Badge>
                 </h4>
                 <ul className="space-y-2">
                   {selectedScenario === "stockyard-low" && (
@@ -409,33 +539,109 @@ const Simulation = () => {
                   {selectedScenario === "urgent-order" && (
                     <>
                       <li className="flex items-start gap-2 text-sm">
-                        <span className="text-primary">•</span>
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                         <span>
                           Allocate dedicated rake for urgent order within 2
                           hours
                         </span>
                       </li>
                       <li className="flex items-start gap-2 text-sm">
-                        <span className="text-primary">•</span>
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                         <span>
                           Expedite loading process with priority lane assignment
                         </span>
                       </li>
                       <li className="flex items-start gap-2 text-sm">
-                        <span className="text-primary">•</span>
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                         <span>
                           Coordinate with railway dispatch for express clearance
                         </span>
                       </li>
                     </>
                   )}
+                  {selectedScenario === "weather-delay" && (
+                    <>
+                      <li className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>
+                          Shift operations to covered loading bays
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>
+                          Extend working hours post-weather clearance
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>
+                          Prioritize weather-resistant wagon types (BCN)
+                        </span>
+                      </li>
+                    </>
+                  )}
+                  {selectedScenario === "peak-demand" && (
+                    <>
+                      <li className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>
+                          Increase rake frequency by 25% during peak hours
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>
+                          Activate backup stockyard to meet demand surge
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>
+                          Optimize wagon mix for maximum throughput
+                        </span>
+                      </li>
+                    </>
+                  )}
                 </ul>
+              </div>
+
+              {/* Risk Assessment */}
+              <div className="glass-card p-6 rounded-xl">
+                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-500" />
+                  Risk Assessment
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20">
+                    <span className="text-sm">Delivery Delay Risk</span>
+                    <Badge className={
+                      selectedScenarioData?.impact === "Critical" ? "bg-red-500" :
+                      selectedScenarioData?.impact === "High" ? "bg-orange-500" : "bg-yellow-500"
+                    }>
+                      {selectedScenarioData?.impact}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20">
+                    <span className="text-sm">Resource Utilization</span>
+                    <Badge className="bg-primary">
+                      {results.adjustedPlan.utilization > 90 ? "Optimal" : "Moderate"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/20">
+                    <span className="text-sm">Cost Overrun</span>
+                    <Badge className={results.adjustedPlan.cost > results.originalPlan.cost ? "bg-orange-500" : "bg-green-500"}>
+                      {results.adjustedPlan.cost > results.originalPlan.cost ? "Elevated" : "Controlled"}
+                    </Badge>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 
